@@ -1,6 +1,6 @@
 # coding=utf-8
 import re
-from scm.db import RecieptDb, receipt_db
+from scm.db import ReceiptDb, receipt_db
 
 main_re = re.compile(
     u'^(\d+ )?([a-zA-Z0-9а-яёА-Я -`]+) ?\(([a-zA-Zа-яёА-Я0-9—, -]+(\(.+\))?[a-zA-Zа-яёА-Я0-9—, -]+)[.)](.*)\)?$')

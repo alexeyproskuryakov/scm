@@ -1,7 +1,7 @@
 from pymongo import MongoClient
 
 
-class RecieptDb():
+class ReceiptDb():
     def __init__(self, config=None):
         client = MongoClient()
         db = client.get_database('scm')
@@ -27,4 +27,4 @@ class RecieptDb():
         return list(left) + list(right)
 
 
-receipt_db = RecieptDb()
+receipt_db = ReceiptDb()
