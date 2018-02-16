@@ -15,16 +15,20 @@ class ReceiptDb():
             self.receipts.create_index('ingredients', 'text')
 
     def save_receipt(self, receipt):
-        self.receipts.update_one({'title': receipt['title']},
+        return self.receipts.update_one({'title': receipt['title']},
                                  {'$set': receipt}, upsert=True)
 
     def get_receipt(self, receipt_title):
         return self.receipts.find_one({'title': receipt_title})
 
     def get_receipt_like(self, q, field='title'):
+        if not q:
+            return list(self.receipts.find({}))
         left = self.receipts.find({field: {'$regex': '%s.*' % q}})
         right = self.receipts.find({field: {'$regex': '.*%s' % q}})
         return list(left) + list(right)
 
+    def clean_recipes(self):
+        return self.receipts.delete_many({})
 
 receipt_db = ReceiptDb()

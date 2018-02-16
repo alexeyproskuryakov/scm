@@ -3,9 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
+    {%block head%}
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+            integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+            crossorigin="anonymous"></script>
+    <script src="http://code.jquery.com/jquery-3.3.1.min.js"
+            integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+            crossorigin="anonymous"></script>
+    {%endblock%}
 </head>
 <body>
 
+<button class="btn btn-sm btn-info" onclick="clean()">
+    clean search results
+</button>
+
+{%if not recipes%}
+<div class="row">
+    <div class="col-md-12">bar closed</div>
+</div>
+{%else%}
+{%for recipe in recipes%}
+<div class="row">
+    <div class="col-md-3">{{recipe.get("title", "-")}}</div>
+    <div class="col-md-9">{{recipe.get("description", "-")}}</div>
+</div>
+{%endfor%}
+{%endif%}
 </body>
+
+<script>
+    function clean()
+    {
+        $.ajax({
+            url:"/clean",
+            type:"get",
+            success:function(data){
+                location.reload();
+            }
+        });
+    }
+</script>
+
 </html>
