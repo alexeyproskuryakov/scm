@@ -4,38 +4,129 @@
     <meta charset="UTF-8">
     <title>Title</title>
     {%block head%}
+    <!-- Latest compiled and minified JavaScript -->
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+            integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+            crossorigin="anonymous"></script>
+
     <!-- Latest compiled and minified CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
           integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 
-    <!-- Latest compiled and minified JavaScript -->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
-            integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
-            crossorigin="anonymous"></script>
-    <script src="http://code.jquery.com/jquery-3.3.1.min.js"
-            integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
-            crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="{{url_for('static', filename='css/style.css')}}">
+
+
     {%endblock%}
 </head>
 <body>
+<div class="container">
 
-<button class="btn btn-sm btn-info" onclick="clean()">
-    clean search results
-</button>
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <ul class=flashes id="flashes">
+        {% for message in messages %}
+        <li><span class="danger"> {{ message }} </span></li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    {% endwith %}
 
-{%if not recipes%}
-<div class="row">
-    <div class="col-md-12">bar closed</div>
+    <div class="row">
+        <button class="btn btn-sm btn-info" onclick="clean()">
+            clean search results
+        </button>
+        <form enctype="multipart/form-data" method="post" action="/upload_recipes">
+  <span class="btn btn-default btn-file">
+    Choose cocktails file <input type="file" name="cocktails_file">
+</span>
+            <input type="submit" value="Upload this">
+        </form>
+
+    </div>
+
+    <div class="row">
+        <form enctype="multipart/form-data" id="recipe-form">
+            <div class="form-group">
+                <label for="title">Title:</label>
+                <input type="text" class="form-control" id="title" name="title" placeholder="Jiorsch">
+            </div>
+            <div class="form-group">
+                <label for="ingredients">Ingredients:</label>
+                <input type="text" class="form-control" id="ingredients" name="ingredients"
+                       placeholder="(vodka - 100, beer - 100)">
+            </div>
+            <div class="form-group">
+                <label for="ingredients">Decorating:</label>
+                <input type="text" class="form-control" id="decorating" name="decorating"
+                       placeholder="virgin vomit">
+            </div>
+            <div class="form-group">
+                <label for="description">Description:</label>
+                <textarea rows="5" class="form-control" id="description" name="description" placeholder="">
+
+                </textarea>
+            </div>
+            <div class="form-group">
+                 <span class="btn btn-default btn-file">Choose image of cocktail
+                     <input type="file" name="file-img">
+                </span>
+            </div>
+            <button type="submit" class="btn btn-default">Постановить</button>
+        </form>
+        <h2 id="result">
+
+        </h2>
+    </div>
+    {%if not recipes%}
+    <div class="row">
+        <div class="col-md-12">bar closed</div>
+    </div>
+    {%else%}
+    {%for recipe in recipes%}
+    <div class="row">
+        <div class="col-md-1">{{recipe.get("title", "-")}}</div>
+        <div class="col-md-3">{{recipe.get("ingredients", "-")}}</div>
+        <div class="col-md-5">{{recipe.get("description", "-")}}</div>
+        <div class="col-md-2">
+            <button class="btn btn-sm btn-info" onclick="edit()">
+                edit
+            </button>
+            <button class="btn btn-sm btn-info" onclick="delete()">
+                delete
+            </button>
+        </div>
+    </div>
+    <hr>
+    {%endfor%}
+    {%endif%}
+
+    {%if bad_recipes%}
+    <h1>Есть некоторые рецепты которые я не смог распознать :( ...</h1>
+    {%for recipe in bad_recipes%}
+    <div class="row" id="{{recipe.get('recipe_id')}}">
+        <div class="col-md-3 title">{{recipe.get("title", "-")}}</div>
+        <div class="col-md-3 ingredients">{{recipe.get("ingredients", "-")}}</div>
+        <div class="col-md-9 description">{{recipe.get("description", "-")}}</div>
+        <div class="col-md-2">
+            <button class="btn btn-sm btn-info" onclick="edit('{{recipe.get('recipe_id')}}')">
+                edit
+            </button>
+            <button class="btn btn-sm btn-info" onclick="delete('{{recipe.get('recipe_id')}}')">
+                delete
+            </button>
+        </div>
+    </div>
+    <hr>
+    {%endfor%}
+    {%endif%}
+
+
 </div>
-{%else%}
-{%for recipe in recipes%}
-<div class="row">
-    <div class="col-md-3">{{recipe.get("title", "-")}}</div>
-    <div class="col-md-9">{{recipe.get("description", "-")}}</div>
-</div>
-{%endfor%}
-{%endif%}
 </body>
+
 
 <script>
     function clean()
@@ -48,6 +139,50 @@
             }
         });
     }
+
+    function edit(recipeID)
+    {
+        var container = $('#'+recipeID),
+            title = container.children('.title').text(),
+            ingredients = container.children('.ingredients').text(),
+            description = container.children('.description').text();
+            console.log(title, ingredients, description)
+
+        $('#title').val(title);
+        $('#ingredients').val(ingredients);
+        $('#description').val(description);
+    }
+
+
+    $(function(){
+        $('#recipe-form').submit(function(e){
+            e.preventDefault();
+            var form = $(this);
+            var data = form.serialize();
+
+            $.ajax({
+                url: '/update_recipe',
+                data: data,
+                type: 'POST',
+                method: 'POST',
+                success: function(data){
+                    if (data.ok){
+                        $('#result').text('OK!');
+                    } else {
+                        $('#result').text(data.error);
+                    }
+                }
+            });
+        });
+    });
+
+
+
+
+
+
+
+
 </script>
 
 </html>
