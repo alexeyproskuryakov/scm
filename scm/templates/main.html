@@ -6,7 +6,7 @@
     {%block head%}
     <!-- Latest compiled and minified JavaScript -->
 
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
 
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
             integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
@@ -49,6 +49,7 @@
 
     <div class="row">
         <form enctype="multipart/form-data" id="recipe-form">
+            <input type="hidden" name="recipe_id" id="recipe-id">
             <div class="form-group">
                 <label for="title">Title:</label>
                 <input type="text" class="form-control" id="title" name="title" placeholder="Jiorsch">
@@ -86,31 +87,25 @@
     </div>
     {%else%}
     {%for recipe in recipes%}
-    <div class="row">
-        <div class="col-md-1">{{recipe.get("title", "-")}}</div>
-        <div class="col-md-3">{{recipe.get("ingredients", "-")}}</div>
-        <div class="col-md-5">{{recipe.get("description", "-")}}</div>
-        <div class="col-md-2">
-            <button class="btn btn-sm btn-info" onclick="edit()">
-                edit
-            </button>
-            <button class="btn btn-sm btn-info" onclick="delete()">
-                delete
-            </button>
-        </div>
-    </div>
-    <hr>
-    {%endfor%}
-    {%endif%}
-
-    {%if bad_recipes%}
-    <h1>Есть некоторые рецепты которые я не смог распознать :( ...</h1>
-    {%for recipe in bad_recipes%}
     <div class="row" id="{{recipe.get('recipe_id')}}">
-        <div class="col-md-3 title">{{recipe.get("title", "-")}}</div>
-        <div class="col-md-3 ingredients">{{recipe.get("ingredients", "-")}}</div>
-        <div class="col-md-9 description">{{recipe.get("description", "-")}}</div>
-        <div class="col-md-2">
+        <div class="col-md-2 title"><h3>{{recipe.get("title", "-")}}</h3></div>
+        <div class="col-md-3 ingredients">
+
+            {%for ingr in recipe.get("ingredients", "-")%}
+            <div class="row">
+                <div class="col-md-6 name">{{ingr['name']}}</div>
+                <div class="col-md-6 value">{{ingr['value']}}</div>
+            </div>
+            {%endfor%}
+        </div>
+        <div class="col-md-6 description">{{recipe.get("description", "-")}}</div>
+        <div class="col-md-1">
+            {% if recipe.get('recipe_id') in bad_receipe_ids %}
+            <span class="label label-danger">PLEASE CHANGE ME!</span>
+            {%else%}
+            <span class="label label-success">ok</span>
+            {%endif%}
+
             <button class="btn btn-sm btn-info" onclick="edit('{{recipe.get('recipe_id')}}')">
                 edit
             </button>
@@ -122,7 +117,6 @@
     <hr>
     {%endfor%}
     {%endif%}
-
 
 </div>
 </body>
@@ -144,13 +138,23 @@
     {
         var container = $('#'+recipeID),
             title = container.children('.title').text(),
-            ingredients = container.children('.ingredients').text(),
+            ingredients = container.children('.ingredients').children('.row'),
             description = container.children('.description').text();
             console.log(title, ingredients, description)
 
+
+        ingredientsString = "";
+        ingredients.each(function(i, x){
+            var name = $(x).children('.name').text(),
+                value = $(x).children('.value').text();
+
+            ingredientsString += name + ' - ' + value + ',';
+        });
+
         $('#title').val(title);
-        $('#ingredients').val(ingredients);
+        $('#ingredients').val(ingredientsString);
         $('#description').val(description);
+        $('#recipe-id').val(recipeID);
     }
 
 
@@ -175,6 +179,7 @@
             });
         });
     });
+
 
 
 
