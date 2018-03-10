@@ -41,7 +41,7 @@ def parse_ingredients(input):
 def recipes_ok():
     q = request.args.get("q", None)
     if q:
-        recipe_list = data_base.get_receipt_like(q)
+        recipe_list = data_base.get_recipe_like(q)
     else:
         recipe_list = list(data_base.get_all_recipes())
 
@@ -66,6 +66,7 @@ def update_recipe():
         save_result = data_base.save_recipe(
             {'title': title, 'description': description, 'ingredients': ingredients, 'decorating': decorating,
              'recipe_id': recipe_id})
+        data_base.set_recipe_valid(recipe_id)
         return jsonify(**{'ok': True, 'updated': save_result.modified_count})
 
     return jsonify(**{'ok': False, 'error': 'Needed some fields value.'})

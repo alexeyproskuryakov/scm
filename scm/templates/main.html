@@ -90,7 +90,6 @@
     <div class="row" id="{{recipe.get('recipe_id')}}">
         <div class="col-md-2 title"><h3>{{recipe.get("title", "-")}}</h3></div>
         <div class="col-md-3 ingredients">
-
             {%for ingr in recipe.get("ingredients", "-")%}
             <div class="row">
                 <div class="col-md-6 name">{{ingr['name']}}</div>
@@ -98,7 +97,14 @@
             </div>
             {%endfor%}
         </div>
-        <div class="col-md-6 description">{{recipe.get("description", "-")}}</div>
+        <div class="col-md-6">
+            <h4 class="row description">
+                {{recipe.get("description", "-")}}
+            </h4>
+            <h5 class="row decorating">
+                {{recipe.get("decorating", "-")}}
+            </h5>
+        </div>
         <div class="col-md-1">
             {% if recipe.get('recipe_id') in bad_receipe_ids %}
             <span class="label label-danger">PLEASE CHANGE ME!</span>
@@ -139,8 +145,10 @@
         var container = $('#'+recipeID),
             title = container.children('.title').text(),
             ingredients = container.children('.ingredients').children('.row'),
-            description = container.children('.description').text();
-            console.log(title, ingredients, description)
+            description = container.find('.description').text(),
+            decorating = container.find('.decorating').text();
+
+            console.log(title, ingredients, description, decorating);
 
 
         ingredientsString = "";
@@ -155,6 +163,7 @@
         $('#ingredients').val(ingredientsString);
         $('#description').val(description);
         $('#recipe-id').val(recipeID);
+        $('#decorating').val(decorating);
     }
 
 
@@ -171,7 +180,7 @@
                 method: 'POST',
                 success: function(data){
                     if (data.ok){
-                        $('#result').text('OK!');
+                        window.location.reload();
                     } else {
                         $('#result').text(data.error);
                     }
@@ -179,6 +188,7 @@
             });
         });
     });
+
 
 
 

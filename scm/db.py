@@ -20,10 +20,13 @@ class ReceiptDb():
         return self.receipts.update_one({'title': recipe['title']},
                                         {'$set': recipe}, upsert=True)
 
-    def get_receipt(self, receipt_title):
+    def set_recipe_valid(self, recipe_id):
+        return self.receipts.update_one({'recipe_id': recipe_id}, {'$unset': {'invalid': True}})
+
+    def get_recipe_by_title(self, receipt_title):
         return self.receipts.find_one({'title': receipt_title})
 
-    def get_receipt_like(self, q, field='title'):
+    def get_recipe_like(self, q, field='title'):
         if not q:
             return list(self.receipts.find({}))
         left = self.receipts.find({field: {'$regex': '%s.*' % q}})

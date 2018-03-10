@@ -16,7 +16,7 @@ def load(file):
             q_ind = line.index('(')
             if q_ind:
                 title = line[:q_ind]
-                existed = receipt_db.get_receipt(title)
+                existed = receipt_db.get_recipe_by_title(title)
                 if existed: continue
                 description = line[q_ind:]
                 ingredients = []
