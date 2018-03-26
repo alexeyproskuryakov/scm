@@ -10,7 +10,7 @@ class ReceiptDb():
             self.receipts = db.get_collection('receipts')
         else:
             self.receipts = db.create_collection('receipts')
-            self.receipts.create_index('title', 'text', unique=True)
+            self.receipts.create_index([('title', 'text')], unique=True)
             self.receipts.create_index('description', 'text')
             self.receipts.create_index('ingredients', 'text')
             self.receipts.create_index('invalid')
@@ -42,6 +42,9 @@ class ReceiptDb():
 
     def get_all_recipes(self):
         return self.receipts.find()
+
+    def update_recipe(self, recipe_id, new_data):
+        return self.receipts.update_one({'recipe_id': int(recipe_id)}, {'$set': new_data})
 
 
 receipt_db = ReceiptDb()

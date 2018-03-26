@@ -39,9 +39,9 @@
             clean search results
         </button>
         <form enctype="multipart/form-data" method="post" action="/upload_recipes">
-  <span class="btn btn-default btn-file">
-    Choose cocktails file <input type="file" name="cocktails_file">
-</span>
+            <span class="btn btn-default btn-file">
+            Choose cocktails file <input type="file" name="cocktails_file">
+            </span>
             <input type="submit" value="Upload this">
         </form>
 
@@ -49,7 +49,7 @@
 
     <div class="row">
         <form enctype="multipart/form-data" id="recipe-form">
-            <input type="hidden" name="recipe_id" id="recipe-id">
+            <input type="hidden" name="recipe_id" class="recipe-id">
             <div class="form-group">
                 <label for="title">Title:</label>
                 <input type="text" class="form-control" id="title" name="title" placeholder="Jiorsch">
@@ -70,16 +70,9 @@
 
                 </textarea>
             </div>
-            <div class="form-group">
-                 <span class="btn btn-default btn-file">Choose image of cocktail
-                     <input type="file" name="file-img">
-                </span>
-            </div>
             <button type="submit" class="btn btn-default">Постановить</button>
         </form>
-        <h2 id="result">
-
-        </h2>
+        <h2 id="result"></h2>
     </div>
     {%if not recipes%}
     <div class="row">
@@ -88,7 +81,8 @@
     {%else%}
     {%for recipe in recipes%}
     <div class="row" id="{{recipe.get('recipe_id')}}">
-        <div class="col-md-2 title"><h3>{{recipe.get("title", "-")}}</h3></div>
+        <div class="col-md-2 title"><h3>{{recipe.get("title", "-")}}</h3>
+        </div>
         <div class="col-md-3 ingredients">
             {%for ingr in recipe.get("ingredients", "-")%}
             <div class="row">
@@ -104,6 +98,14 @@
             <h5 class="row decorating">
                 {{recipe.get("decorating", "-")}}
             </h5>
+            {%if recipe.get('img') %}
+            <img src="{{url_for('static', filename='img/cocktails/%s'%recipe.get('img') )}}" width="60" height="60"/>
+            {%elif recipe.get('recipe_id')%}
+            <span class="btn btn-sm btn-file">
+                     <span class="glyphicon glyphicon-open-file" aria-hidden="true"></span>
+                     <input type="file" name="file-img" class="file-upload" recipe-id="{{recipe.get('recipe_id')}}">
+                </span>
+            {%endif%}
         </div>
         <div class="col-md-1">
             {% if recipe.get('recipe_id') in bad_receipe_ids %}
@@ -123,7 +125,6 @@
     <hr>
     {%endfor%}
     {%endif%}
-
 </div>
 </body>
 
@@ -162,7 +163,8 @@
         $('#title').val(title);
         $('#ingredients').val(ingredientsString);
         $('#description').val(description);
-        $('#recipe-id').val(recipeID);
+
+        $('.recipe-id').val(recipeID);
         $('#decorating').val(decorating);
     }
 
@@ -188,6 +190,54 @@
             });
         });
     });
+
+
+    $('.file-upload').on('change', function() {
+        var recipeId = $(this).attr('recipe-id');
+
+        var file_data = $(this).prop('files')[0];
+        if (file_data === undefined){
+            return;
+        }
+        var form_data = new FormData();
+        form_data.append('file_img', file_data);
+        form_data.append('recipe_id', recipeId)
+        console.log(form_data);
+
+        $.ajax({
+            url: 'set_image', // point to server-side PHP script
+            dataType: 'json',  // what to expect back from the PHP script, if anything
+            cache: false,
+            contentType: false,
+            processData: false,
+            data: form_data,
+            type: 'post',
+            success: function(data){
+                console.log(data);
+                if (data.ok){
+                    $("#result").append("<img src='/static/img/cocktails/"+data.result+"' class='img-responsive center-block' width=640 height=480></img>");
+                } else {
+                    $('#result').text(data.error);
+                }
+            }
+        });
+    });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
