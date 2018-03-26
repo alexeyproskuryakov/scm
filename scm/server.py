@@ -1,14 +1,18 @@
+# coding=utf-8
 import os
 from flask import Flask, request, render_template, jsonify, flash, url_for
 from werkzeug.utils import redirect, secure_filename
 
+from scm import RECIPE_ID
 from scm.db import ReceiptDb
 from scm.loader import load
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
 
-UPLOAD_FOLDER = '/path/to/the/uploads'
-ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
+# aга, вот сюда будем сохранять... /папка текущего файла/static/img
+UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'static', 'img', 'cocktails')
+
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 app.secret_key = 'super secret key'
@@ -53,20 +57,21 @@ def recipes_ok():
 @app.route("/update_recipe", methods=['POST'])
 def update_recipe():
     title = request.form.get('title')
+    ingredients_value = request.form.get('ingredients')
     try:
-        ingredients_value = request.form.get('ingredients')
         ingredients = parse_ingredients(ingredients_value)
     except Exception:
         return jsonify(**{'ok': False, 'error': 'Ingredients field value %s is not valid' % ingredients_value})
 
     description = request.form.get('description')
     decorating = request.form.get('decorating')
-    recipe_id = request.form.get('recipe_id')
+
+    # вот тут значит вся магия: recipe_id будет равен тому что из формы. Но если, это говно пустоте (None, '', 0, [], {}, (), ) то берем сгенерированный.
+    recipe_id = request.form.get('recipe_id') or RECIPE_ID(title, description, ingredients)
     if title and ingredients and description:
         save_result = data_base.save_recipe(
             {'title': title, 'description': description, 'ingredients': ingredients, 'decorating': decorating,
              'recipe_id': recipe_id})
-        data_base.set_recipe_valid(recipe_id)
         return jsonify(**{'ok': True, 'updated': save_result.modified_count})
 
     return jsonify(**{'ok': False, 'error': 'Needed some fields value.'})
@@ -98,6 +103,29 @@ def upload_recipes():
             print e
             flash('Some error: %s' % e.message)
             return redirect(url_for('recipes_ok'))
+
+
+# тут, значитца проверяем, копируем картинку-с и возвращаем имя файла в статике
+@app.route('/set_image', methods=['POST'])
+def set_image():
+    if 'file_img' not in request.files:
+        return jsonify(**{'ok': False, 'error': 'No file'})
+    file = request.files['file_img']
+    if file.filename == '':
+        return jsonify(**{'ok': False, 'error': 'No file'})
+    if file.filename[-3:] not in ALLOWED_EXTENSIONS:
+        return jsonify(**{'ok': False, 'error': 'Bad extension'})
+    recipe_id = request.form.get('recipe_id')
+    if not recipe_id:
+        return jsonify(**{'ok': False, 'error': 'No file'})
+
+    file_name = '%s.%s' % (recipe_id, file.filename[-3:])
+    dest_file_name = os.path.join(UPLOAD_FOLDER, file_name)
+    if file and file.filename:
+        file.save(dest_file_name)
+
+    data_base.update_recipe(recipe_id, {'img': file_name})
+    return jsonify(**{'ok': True, 'result': file_name})
 
 
 @app.route("/clean")

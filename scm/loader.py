@@ -1,5 +1,7 @@
 # coding=utf-8
 import re
+
+from scm import RECIPE_ID
 from scm.db import receipt_db
 
 main_re = re.compile(
@@ -23,7 +25,7 @@ def load(file):
                 if title and description:
                     print 'title %s\ningrs: %s\ndescr: %s' % (title, ingredients, description)
                     yield {'title': title, 'description': description, 'ingredients': ingredients,
-                           'recipe_id': hash('%s%s%s' % (title, description, ingredients))}
+                           'recipe_id': RECIPE_ID(title, description, ingredients)}
         else:
             print 'ERROR :('
             err += 1
